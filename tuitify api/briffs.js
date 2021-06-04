@@ -606,7 +606,7 @@ router.delete('/delete_recive?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('delete from c_shared where to_id = ? and briff_id = ?', [req.query.user_id,id[i]], (err, row1) => {
+            mysqlconnection.query('delete from c_shared where to_id = ? and briff_id = ?', [req.query.user_id, id[i]], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -639,7 +639,7 @@ router.delete('/delete_send?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('delete from c_shared where from_id = ? and briff_id = ?', [req.query.user_id,id[i]], (err, row1) => {
+            mysqlconnection.query('delete from c_shared where from_id = ? and briff_id = ?', [req.query.user_id, id[i]], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -672,7 +672,7 @@ router.delete('/unarchive?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('delete from c_archived where user_id = ? and briff_id = ?', [req.query.user_id,id[i]], (err, row1) => {
+            mysqlconnection.query('delete from c_archived where user_id = ? and briff_id = ?', [req.query.user_id, id[i]], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -706,7 +706,7 @@ router.post('/archive?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('insert into c_archived(user_id,briff_id,created,modified) values(?,?,?,?)', [req.query.user_id,id[i],req.query.date,req.query.date], (err, row1) => {
+            mysqlconnection.query('insert into c_archived(user_id,briff_id,created,modified) values(?,?,?,?)', [req.query.user_id, id[i], req.query.date, req.query.date], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -739,7 +739,7 @@ router.put('/mark_read?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('update c_shared set is_read=? where to_id=? and briff_id = ?', [1,req.query.user_id,id[i]], (err, row1) => {
+            mysqlconnection.query('update c_shared set is_read=? where to_id=? and briff_id = ?', [1, req.query.user_id, id[i]], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -762,6 +762,40 @@ router.put('/mark_read?', (req, res) => {
 })
 //end
 
+//mark as unread data
+router.put('/mark_unread?', (req, res) => {
+
+    if (!req.query.name == '') {
+
+        //connect database
+        plat(req.query.name);
+        var id = JSON.parse(req.query.id);
+        console.log(id);
+        for (let i = 0; i < id.length; i++) {
+            mysqlconnection.query('update c_shared set is_read=? where to_id=? and briff_id = ?', [0, req.query.user_id, id[i]], (err, row1) => {
+console.log(err);
+                console.log(id[i]);
+                if (id.length - 1 == i || id.length == 1) {
+
+                    res.send({
+                        status: 'true',
+                        message: 'successfully mark as unread'
+                    })
+
+                }
+            })
+        }
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+})
+//end
+
+
 //forward data
 router.post('/forward?', (req, res) => {
 
@@ -772,7 +806,77 @@ router.post('/forward?', (req, res) => {
         var id = JSON.parse(req.query.id);
         console.log(id);
         for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('insert into c_shared(from_id,to_id,briff_id,is_read,status,created,modified) values(?,?,?,?,?,?,?)', [req.query.user_id,id[i],req.query.briff_id,0,1,req.query.date,req.query.date], (err, row1) => {
+            mysqlconnection.query('insert into c_shared(from_id,to_id,briff_id,is_read,status,created,modified) values(?,?,?,?,?,?,?)', [req.query.user_id, id[i], req.query.briff_id, 0, 1, req.query.date, req.query.date], (err, row1) => {
+
+                console.log(id[i]);
+                if (id.length - 1 == i || id.length == 1) {
+
+                    res.send({
+                        status: 'true',
+                        message: 'successfully forward'
+                    })
+
+                }
+            })
+        }
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+})
+//end
+
+//forward data
+router.post('/create_briffs?', (req, res) => {
+
+//api url
+//localhost:3000/comm/create_briffs?name=test&tags=document,new&user_id=162&date=2018-02-02 07:18:42&platform_id=18&title=1st briffs&description=this is first briff of document type &type=pdf&thumbnail=image.png
+
+if (!req.query.name == '') {
+
+        //connect database
+        plat(req.query.name);
+
+        mysqlconnection.query('insert into c_briffs(title,description,thumbnail,tags,duration,type,user_id,platform_id,is_delete,created,modified) values(?,?,?,?,?,?,?,?,?,?,?)', [req.query.title,req.query.description,req.query.thumbnail,req.query.tags,req.query.duration,req.query.type,req.query.user_id, req.query.platform_id,0,req.query.date,req.query.date], (err, row1) => {
+
+            if (!err) {
+                res.send({
+                    status: 'true',
+                    message: 'successfully create briff'
+                })
+            }
+            else {
+                res.send({
+                    status: 'false',
+                    message: err
+                })
+            }
+
+        })
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+})
+//end
+
+//forward data
+router.post('/play?', (req, res) => {
+
+    if (!req.query.name == '') {
+
+        //connect database
+        plat(req.query.name);
+        var id = JSON.parse(req.query.id);
+        console.log(id);
+        for (let i = 0; i < id.length; i++) {
+            mysqlconnection.query('insert into c_shared(from_id,to_id,briff_id,is_read,status,created,modified) values(?,?,?,?,?,?,?)', [req.query.user_id, id[i], req.query.briff_id, 0, 1, req.query.date, req.query.date], (err, row1) => {
 
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
@@ -796,7 +900,6 @@ router.post('/forward?', (req, res) => {
 //end
 
 
- 
 
 
 
