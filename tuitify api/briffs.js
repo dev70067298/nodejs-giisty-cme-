@@ -773,7 +773,7 @@ router.put('/mark_unread?', (req, res) => {
         console.log(id);
         for (let i = 0; i < id.length; i++) {
             mysqlconnection.query('update c_shared set is_read=? where to_id=? and briff_id = ?', [0, req.query.user_id, id[i]], (err, row1) => {
-console.log(err);
+                console.log(err);
                 console.log(id[i]);
                 if (id.length - 1 == i || id.length == 1) {
 
@@ -832,15 +832,15 @@ router.post('/forward?', (req, res) => {
 //forward data
 router.post('/create_briffs?', (req, res) => {
 
-//api url
-//localhost:3000/comm/create_briffs?name=test&tags=document,new&user_id=162&date=2018-02-02 07:18:42&platform_id=18&title=1st briffs&description=this is first briff of document type &type=pdf&thumbnail=image.png
+    //api url
+    //localhost:3000/comm/create_briffs?name=test&tags=document,new&user_id=162&date=2018-02-02 07:18:42&platform_id=18&title=1st briffs&description=this is first briff of document type &type=pdf&thumbnail=image.png
 
-if (!req.query.name == '') {
+    if (!req.query.name == '') {
 
         //connect database
         plat(req.query.name);
 
-        mysqlconnection.query('insert into c_briffs(title,description,thumbnail,tags,duration,type,user_id,platform_id,is_delete,created,modified) values(?,?,?,?,?,?,?,?,?,?,?)', [req.query.title,req.query.description,req.query.thumbnail,req.query.tags,req.query.duration,req.query.type,req.query.user_id, req.query.platform_id,0,req.query.date,req.query.date], (err, row1) => {
+        mysqlconnection.query('insert into c_briffs(title,description,thumbnail,tags,duration,type,user_id,platform_id,is_delete,created,modified) values(?,?,?,?,?,?,?,?,?,?,?)', [req.query.title, req.query.description, req.query.thumbnail, req.query.tags, req.query.duration, req.query.type, req.query.user_id, req.query.platform_id, 0, req.query.date, req.query.date], (err, row1) => {
 
             if (!err) {
                 res.send({
@@ -866,29 +866,31 @@ if (!req.query.name == '') {
 })
 //end
 
-//forward data
-router.post('/play?', (req, res) => {
+//play briff data
+router.get('/play_briff?', (req, res) => {
 
     if (!req.query.name == '') {
 
         //connect database
         plat(req.query.name);
-        var id = JSON.parse(req.query.id);
-        console.log(id);
-        for (let i = 0; i < id.length; i++) {
-            mysqlconnection.query('insert into c_shared(from_id,to_id,briff_id,is_read,status,created,modified) values(?,?,?,?,?,?,?)', [req.query.user_id, id[i], req.query.briff_id, 0, 1, req.query.date, req.query.date], (err, row1) => {
 
-                console.log(id[i]);
-                if (id.length - 1 == i || id.length == 1) {
+        mysqlconnection.query('SELECT users.first_name,users.last_name,users.image,c_briffs.title,c_briffs.description,c_briffs.thumbnail,c_briffs.tags,c_briffs.duration,c_briffs.type,c_briffs.created FROM c_briffs left join users on c_briffs.user_id = users.id where c_briffs.id = ? and c_briffs.platform_id = ? and c_briffs.is_delete=?', [req.query.briff_id, req.query.platform_id, 0], (err, row1) => {
 
-                    res.send({
-                        status: 'true',
-                        message: 'successfully forward'
-                    })
-
-                }
-            })
-        }
+            if (row1.length > 0) {
+                res.send({
+                    status: 'true',
+                    briff: row1,
+                    message: 'success'
+                })
+            }
+            else {
+                res.send({
+                    status: 'false',
+                    briff: [],
+                    message: err
+                })
+            }
+        })
     }
     else {
         res.send({
@@ -898,6 +900,73 @@ router.post('/play?', (req, res) => {
 
 })
 //end
+
+//interaction of briffs
+router.get('/interaction?', (req, res) => {
+
+
+//api url
+//http://localhost:3000/comm/interaction?name=test&briff_id=1&user_id=172
+    if (!req.query.name == '') {
+
+        //connect database
+        plat(req.query.name);
+        var array = [];
+        mysqlconnection.query('SELECT users.first_name,users.last_name,users.image,c_comments.briff_id,c_comments.id,c_comments.title,c_comments.message,c_comments.thumbnail,c_comments.type,c_comments.user_id,c_comments.parent_id,c_comments.created FROM c_comments left join users on c_comments.user_id = users.id where c_comments.briff_id = ? and c_comments.is_delete=? and c_comments.parent_id=?', [req.query.briff_id, 0, 0], (err, row1) => {
+
+            if (row1.length > 0) {
+                for (let i = 0; i < row1.length; i++) {
+                    mysqlconnection.query('SELECT users.first_name,users.last_name,users.image,c_comments.briff_id,c_comments.id,c_comments.title,c_comments.message,c_comments.thumbnail,c_comments.type,c_comments.user_id,c_comments.parent_id,c_comments.created FROM c_comments left join users on c_comments.user_id = users.id where c_comments.briff_id = ? and c_comments.is_delete=? and c_comments.parent_id=?', [req.query.briff_id, 0, row1[i].id], (err, row2) => {
+                        mysqlconnection.query('SELECT count(*) as likes from c_favourites inner join c_comments on c_favourites.briff_id = c_comments.id where c_comments.parent_id = ? and c_favourites.briff_id = ?', [0, row1[i].id], (err, row3) => {
+                            row1[i].likes = row3[0].likes;
+
+
+                            mysqlconnection.query('SELECT * from c_favourites inner join c_comments on c_favourites.briff_id = c_comments.id where c_comments.parent_id = ? and c_favourites.briff_id = ? and c_favourites.user_id = ?', [0, row1[i].id, req.query.user_id], (err, row4) => {
+                                if (row4.length > 0) {
+                                    row1[i].likedbyme = true;
+
+                                }
+                                else {
+                                    row1[i].likedbyme = false;
+
+                                }
+
+                                row1[i].comments = row2;
+
+                                if (row1.length - 1 == i || row1.length == 1) {
+                                    res.send({
+                                        status: 'true',
+                                        interactions: row1,
+                                        message: 'success'
+                                    })
+
+
+                                }
+
+                            })
+                        })
+                    })
+                }
+
+            }
+            else {
+                res.send({
+                    status: 'false',
+                    interactions: [],
+                    message: err
+                })
+            }
+        })
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+})
+//end
+
 
 
 
