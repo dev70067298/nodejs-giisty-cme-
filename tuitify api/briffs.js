@@ -905,8 +905,8 @@ router.get('/play_briff?', (req, res) => {
 router.get('/interaction?', (req, res) => {
 
 
-//api url
-//http://localhost:3000/comm/interaction?name=test&briff_id=1&user_id=172
+    //api url
+    //http://localhost:3000/comm/interaction?name=test&briff_id=1&user_id=172
     if (!req.query.name == '') {
 
         //connect database
@@ -967,7 +967,108 @@ router.get('/interaction?', (req, res) => {
 })
 //end
 
+//like interaction
 
+router.post('/like_interaction?', (req, res) => {
+
+//api url
+//http://localhost:3000/comm/like_interaction?name=test&id=1&user_id=162&like=1
+
+
+    if (!req.query.name == '') {
+
+        plat(req.query.name);
+        if (req.query.like == 1) {
+            mysqlconnection.query('insert into c_favourites (user_id,briff_id,created,modified) values(?,?,?,?)', [req.query.user_id, req.query.id, req.query.date, req.query.date], (err, row) => {
+                console.log(err);
+
+                if (!err) {
+                    res.send({
+                        status: 'true',
+                        message: 'liked'
+                    });
+
+                }
+                else {
+                    res.send({
+                        status: 'false',
+                        message: 'failed'
+                    });
+
+                }
+            })
+
+        }
+        else {
+
+            mysqlconnection.query('delete from c_favourites where user_id=? and briff_id=?', [req.query.user_id, req.query.id], (err, row) => {
+
+                if (!err) {
+
+                    res.send({
+                        status: 'true',
+                        message: 'dislike'
+                    });
+
+                }
+                else {
+                    res.send({
+                        status: 'false',
+                        message: 'failed'
+                    });
+
+                }
+            })
+
+
+        }
+
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+
+})
+
+//end
+
+//insert comment
+router.post('/insert_comment?', (req, res) => {
+
+
+    if (!req.query.name == '') {
+
+        //connect database
+        plat(req.query.name);
+
+        mysqlconnection.query('insert into c_comments(user_id,briff_id,title,message,thumbnail,type,is_delete,parent_id,created,modified) values(?,?,?,?,?,?,?,?,?,?)', [req.query.user_id,req.query.briff_id,req.query.title,req.query.message,req.query.thumbnail,req.query.type,0,req.query.parent_id,req.query.date,req.query.date], (err, row1) => {
+
+            if (!err) {
+                res.send({
+                    status: 'true',
+                    message: 'successfully insert comment'
+                })
+            }
+            else {
+                res.send({
+                    status: 'false',
+                    message: err
+                })
+            }
+
+        })
+    }
+    else {
+        res.send({
+            message: 'no platform selected'
+        })
+    }
+
+})
+//end
 
 
 
