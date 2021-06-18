@@ -498,7 +498,6 @@ router.get('/search_send?', (req, res) => {
 
 //end
 
-
 //search archive data
 router.get('/search_archive?', (req, res) => {
 
@@ -535,7 +534,6 @@ router.get('/search_archive?', (req, res) => {
 
                     }
                 })
-
                 break;
             case "duration":
                 mysqlconnection.query('SELECT users.first_name,users.last_name,users.image,c_briffs.id,c_briffs.title,c_briffs.description,c_briffs.thumbnail,c_briffs.tags,c_briffs.duration,c_briffs.type,c_archived.created FROM c_archived left join TuitifyXelorDemo.c_briffs on c_archived.briff_id  = c_briffs.id left join users on c_archived.user_id = users.id where c_archived.user_id=? and c_briffs.duration = ?', [req.query.user_id, string], (err, row1) => {
@@ -557,7 +555,6 @@ router.get('/search_archive?', (req, res) => {
 
                     }
                 })
-
                 break;
             case "date":
                 mysqlconnection.query('SELECT users.first_name,users.last_name,users.image,c_briffs.id,c_briffs.title,c_briffs.description,c_briffs.thumbnail,c_briffs.tags,c_briffs.duration,c_briffs.type,c_archived.created FROM c_archived left join TuitifyXelorDemo.c_briffs on c_archived.briff_id  = c_briffs.id left join users on c_archived.user_id = users.id where c_archived.user_id=? and c_archived.created=?', [req.query.user_id, string], (err, row1) => {
@@ -568,7 +565,6 @@ router.get('/search_archive?', (req, res) => {
                             archive: row1,
                             message: 'success'
                         })
-
                     }
                     else {
                         res.send({
@@ -576,7 +572,6 @@ router.get('/search_archive?', (req, res) => {
                             archive: [],
                             message: 'Their is no Archive briffs with this date'
                         })
-
                     }
                 })
 
@@ -593,10 +588,10 @@ router.get('/search_archive?', (req, res) => {
         })
     }
 })
-
 //end
 
 //delete recive data
+
 router.delete('/delete_recive?', (req, res) => {
 
     if (!req.query.name == '') {
